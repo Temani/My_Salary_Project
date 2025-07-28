@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}מחשבון שכר{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      /* תיקונים לעברית */
+      .navbar-brand {
+        margin-right: 0;
+        margin-left: auto;
+      }
+      .navbar-nav {
+        margin-right: auto;
+        margin-left: 0;
+      }
+      .container {
+        max-width: 100%;
+      }
+      body {
+    font-family: "Alef", sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  title {
+    font-family: 'Rubik', sans-serif;
+  }
+  .main-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+    </style>
+    <style>
+  body {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .navbar + div {
+    margin-top: 0 !important;
+  }
+</style>
+
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">מחשבון שכר</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('home') }}">בית</a>
+            </li>
+            {% if not current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('login') }}">התחברות</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('register') }}">הרשמה</a>
+            </li>
+            {% endif %} {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('manage_shifts') }}"
+                >המשמרות שלי</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">התנתק</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+    <main class="container-fluid">
+
+      {% block content %}
+      <!-- כאן יוצג התוכן מהדפים האחרים -->
+      {% endblock %}
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      setTimeout(function () {
+        let alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function (alert) {
+          let fade = new bootstrap.Alert(alert);
+          fade.close();
+        });
+      }, 3500);
+    </script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+  </body>
+</html>
+{% extends 'footer.html' %}

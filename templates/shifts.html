@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4 p-4 bg-white rounded shadow-sm">
+  <h4 class="mb-4">הוספת משמרת חדשה</h4>
+  <form method="POST">
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label class="form-label">תאריך:</label>
+        <input type="date" name="date" class="form-control" required />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">שעת התחלה:</label>
+        <input type="time" name="start_time" class="form-control" required />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">שעת סיום:</label>
+        <input type="time" name="end_time" class="form-control" required />
+      </div>
+    </div>
+
+    <div class="row align-items-end mb-3">
+      <div class="col-md-9">
+        <label class="form-label">הערה:</label>
+        <input type="text" name="note" class="form-control" placeholder="לא חובה" />
+      </div>
+      <div class="col-md-3 text-end">
+        <button type="submit" class="btn btn-primary w-100">💾 שמור משמרת</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="container mt-5">
+  <h5 class="mb-3">רשימת משמרות:</h5>
+
+
+  <table class="table table-striped text-center">
+    <thead class="table-dark">
+      <tr>
+        <th>#</th>
+        <th>יום</th>
+        <th>התחלה</th>
+        <th>סיום</th>
+        <th>שעות</th>
+        <th>הסר</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for shift in shifts %}
+      <tr>
+        <th scope="row">{{ loop.index }}</th>
+        <td>{{ shift.date }}</td>
+        <td>{{ shift.start_time }}</td>
+        <td>{{ shift.end_time }}</td>
+        <td>{{ get_shift_duration(shift) }}</td>
+        <td>
+          <form action="{{ url_for('delete_shift', shift_id=shift.id) }}" method="POST" onsubmit="return confirm('האם אתה בטוח שברצונך למחוק את המשמרת?');">
+            <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+            </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

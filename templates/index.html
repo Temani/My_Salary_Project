@@ -1,0 +1,85 @@
+{% extends 'base.html' %} {% block content %}
+
+<style>
+  .product-device {
+    position: absolute;
+    right: 10%;
+    bottom: -30%;
+    width: 300px;
+    height: 540px;
+    background-color: #e5e5e5;
+    border-radius: 21px;
+    transform: rotate(30deg);
+  }
+
+  .product-device::before {
+    content: "";
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-color: rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+  }
+
+  .product-device-2 {
+    left: 10%;
+    top: -25%;
+    background-color: #333;
+    transform: rotate(-30deg);
+  }
+</style>
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+<div
+  class="position-relative overflow-hidden p-0 m-0 text-center bg-light"
+>
+  <div class="col-md-5 p-lg-5 mx-auto my-5">
+    <h1 class="display-4 fw-normal" style="position: relative; z-index: 2;">ניהול זמן חכם מתחיל כאן</h1>
+    <p class="lead fw-normal" style="position: relative; z-index: 2;">
+      הכירו את הדרך הפשוטה, המדויקת והנוחה לעקוב אחרי שעות העבודה של הצוות שלכם.
+      חוסכים זמן, מונעים טעויות ומקבלים תלוש שכר ברור, שקוף ומדויק. שעון נוכחות
+      שמדבר בשפה שלכם.
+       <br>🔒 מאובטח | 🕒 אוטומטי | 📱 מתאים לכל מכשיר
+    </p>
+    <a class="btn btn-outline-secondary" style="position: relative; z-index: 2;" href="#">המערכת תעלה בקרוב</a>
+  </div>
+  <div class="product-device shadow-sm d-none d-md-block"></div>
+  <div
+    class="product-device product-device-2 shadow-sm d-none d-md-block"
+  ></div>
+</div>
+<div class="container px-4 py-5" id="hanging-icons">
+    <h2 class="pb-2 border-bottom">למה אנחנו?</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+      <div class="col d-flex align-items-start">
+        
+        <div>
+          <h2><i class="fas fa-brain text-primary fa-lg"></i> מעקב שעות חכם</h2>
+          <p>שכח ממחברות וניחושים. המערכת שלנו יודעת לחשב עבורך כל שעה – רגילה או נוספת – לפי חוקי השכר בישראל, באופן אוטומטי ומדויק.</p>
+          
+        </div>
+      </div>
+      <div class="col d-flex align-items-start">
+        
+        <div>
+          <h2><i class="fas fa-tools text-primary fa-lg"></i> התאמה אישית מושלמת</h2>
+          <p>הוסף הערות למשמרות, ערוך ניכויים, נהל נקודות זיכוי – הכל במקום אחד. שליטה מלאה בכל רכיבי השכר שלך – מעכשיו זה פשוט.</p>
+          
+        </div>
+      </div>
+      <div class="col d-flex align-items-start">
+        
+        <div>
+          <h2><i class="fas fa-chart-bar text-primary fa-lg"></i> דוחות חודשיים</h2>
+          <p>המערכת יוצרת עבורך תלושי שכר חודשיים כולל חלוקה לפי אחוזי שכר, שעות נוספות, ניכויים, ברוטו ונטו – בלחיצת כפתור.</p>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
