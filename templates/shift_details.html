@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h5 class="mb-3 pt-5 text-center">פרטי משמרת</h5>
+<div class="container mt-4 p-4 bg-white rounded shadow-sm">
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">תאריך:</label>
+      <input type="text" class="form-control" value="{{ shift.date }} - {{ day_of_week }}" disabled>
+
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">שעת התחלה:</label>
+      <input type="text" class="form-control" value="{{ shift.start_time }}" disabled>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">שעת סיום:</label>
+      <input type="text" class="form-control" value="{{ shift.end_time }}" disabled>
+
+      <div class="col-md-12 mt-3">
+        <label class="form-label">משך המשמרת:</label>
+        <input type="text" class="form-control" value="{{ get_shift_duration(shift) }}" disabled>
+      </div>
+    </div>
+  </div>
+    <div class="row mb-3">
+        <div class="col-md-12">
+        <label class="form-label">הערה:</label>
+        <input type="text" class="form-control" value="{{ shift.note }}" disabled>
+        </div>
+    </div>
+
+<div class="card my-4">
+  <div class="card-header bg-primary text-white">
+    תעריף לפי מדרגות שכר
+  </div>
+  <div class="card-body">
+    <table class="table table-bordered text-center">
+      <thead>
+        <tr>
+          <th>סוג</th>
+          <th>תעריף</th>
+          <th>שעות</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rate, amount in tiers.items() %}
+          {% if amount > 0 %}
+          <tr>
+            <td>
+              {% if rate == "100%" %}שעות רגילות
+              {% else %}שעות נוספות{% endif %}
+            </td>
+            <td>{{ rate }}</td>
+            <td>{{ "%.2f"|format(amount) }}</td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+    <div class="container mt-4">
+  <h2>דו"ח שכר</h2>
+  <p>סה"כ שעות עבודה: {{ get_shift_duration(shift) }}</p>
+  <p>סה"כ שכר ברוטו: {{ total_salary }} ₪</p>
+</div>
+
+{% endblock %}

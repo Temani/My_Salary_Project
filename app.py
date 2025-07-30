@@ -1,17 +1,17 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 import os
 from dotenv import load_dotenv
 from flask_bootstrap import Bootstrap5
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Shift
+from models import db, User, Shift, TaxExemptCity, Child
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-import time
+import locale
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as dt_date
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # אתחול Flask
@@ -34,6 +34,7 @@ def user_loader(user_id):
     return User.query.get(int(user_id))
 
 login_manager.init_app(app)
+locale.setlocale(locale.LC_ALL, 'he_IL.UTF-8')
 
 
 @app.route('/')
@@ -114,6 +115,7 @@ def logout():
     flash('התנתקת בהצלחה!', 'success')
     return redirect(url_for('login'))
 
+
 @app.route('/shifts', methods=['GET', 'POST'])
 @login_required
 def manage_shifts():
@@ -131,15 +133,15 @@ def manage_shifts():
         try:
             shift_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             start_time = datetime.strptime(start_time_str, '%H:%M').time()
-            end_time = datetime.strptime(end_time_str, '%H:%M').time()
-            
+            end_time = datetime.strptime(end_time_str, '%H:%M').time()            
             
             new_shift = Shift(
                 user_id=user.id,
                 date=shift_date,
                 start_time=start_time,
                 end_time=end_time,
-                note=note
+                note=note,
+                
             )
             db.session.add(new_shift)
             db.session.commit()
@@ -152,7 +154,7 @@ def manage_shifts():
         flash('אין משמרות זמינות', 'info')
     return render_template('shifts.html',user=user, shifts=shifts, get_shift_duration=get_shift_duration)
 
-from datetime import datetime, timedelta
+
 
 # חישוב משך המשמרת
 def get_shift_duration(shift):
@@ -173,6 +175,41 @@ def get_shift_duration(shift):
 
     return f"{hours:02d}:{minutes:02d}"
 
+def calculate_shift_pay(hours, hourly_rate):
+    tiers = {
+        "100%": 0,
+        "125%": 0,
+        "150%": 0,
+        "200%": 0
+    }
+    pay = 0
+
+    if hours <= 8:
+        tiers["100%"] = hours
+        pay += hours * hourly_rate
+    elif hours <= 10:
+        tiers["100%"] = 8
+        tiers["125%"] = hours - 8
+        pay += 8 * hourly_rate + (hours - 8) * hourly_rate * 1.25
+    elif hours <= 12:
+        tiers["100%"] = 8
+        tiers["125%"] = 2
+        tiers["150%"] = hours - 10
+        pay += 8 * hourly_rate + 2 * hourly_rate * 1.25 + (hours - 10) * hourly_rate * 1.5
+    else:
+        tiers["100%"] = 8
+        tiers["125%"] = 2
+        tiers["150%"] = 2
+        tiers["200%"] = hours - 12
+        pay += (
+            8 * hourly_rate +
+            2 * hourly_rate * 1.25 +
+            2 * hourly_rate * 1.5 +
+            (hours - 12) * hourly_rate * 2
+        )
+
+    return round(pay, 2), tiers
+
 @app.route('/delete_shift/<int:shift_id>', methods=['POST'])
 @login_required
 def delete_shift(shift_id):
@@ -188,6 +225,59 @@ def delete_shift(shift_id):
     flash('המשמרת נמחקה בהצלחה!', 'success')
     return redirect(url_for('manage_shifts'))
 
+
+
+@app.route("/personal_info", methods=["GET", "POST"])
+@login_required
+def personal_info():
+    if request.method == "POST":
+        current_user.birth_date = request.form["birth_date"]
+        current_user.gender = request.form["gender"]
+        current_user.marital_status = request.form["marital_status"]
+        current_user.city = request.form["city"]
+        current_user.hourly_wage = request.form.get("hourly_wage", type=float) or None
+        current_user.has_degree = "has_degree" in request.form
+        current_user.degree_year = request.form.get("degree_year") or None
+
+        # מחיקת ילדים ישנים (אם יש)
+        Child.query.filter_by(user_id=current_user.id).delete()
+
+        for date in request.form.getlist("child_birthdates"):
+            if date:
+                child = Child(birth_date=date, parent=current_user)
+                db.session.add(child)
+
+        db.session.commit()
+        flash("הפרטים עודכנו בהצלחה!", "success")
+        return redirect(url_for("personal_info"))
+    current_date = dt_date.today().isoformat()
+
+    return render_template("personal_info.html", user=current_user, current_date = current_date
+)
+
+@app.route('/api/cities')
+def get_cities():
+    cities = TaxExemptCity.query.with_entities(TaxExemptCity.city_name).order_by(TaxExemptCity.city_name).all()
+    city_list = [city[0] for city in cities]
+    return jsonify(city_list)
+
+@app.route('/shift_details/<int:shift_id>', methods=['GET', 'POST'])
+@login_required
+def shift_details(shift_id):
+    shift = Shift.query.get_or_404(shift_id)
+    # בדיקה אם המשתמש הנוכחי הוא הבעלים של המשמרת
+    if shift.user_id != current_user.id:
+        flash('אין לך הרשאה לצפות בפרטי משמרת זו', 'danger')
+        return redirect(url_for('manage_shifts'))
+    
+    duration_str = get_shift_duration(shift)
+    hours, minutes = map(int, duration_str.split(':'))
+    total_hours = hours + minutes / 60
+    total_salary, tiers = calculate_shift_pay(total_hours, current_user.hourly_wage)
+    day_of_week = calendar.day_name[shift.date.weekday()]
+
+    return render_template('shift_details.html', shift=shift,get_shift_duration=get_shift_duration,
+                            duration_str=duration_str, total_salary=round(total_salary, 2), tiers=tiers, day_of_week=day_of_week)
 
 if __name__ == '__main__': 
     app.run(debug=True)

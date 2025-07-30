@@ -1,0 +1,161 @@
+{% extends "base.html" %} 
+{% block content %}
+
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header text-center bg-primary text-white">
+      <h4 class="mb-0">הזן את המידע האישי שלך</h4>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label class="form-label">תאריך לידה:</label>
+          <input type="date" name="birth_date" class="form-control" value="{{ user.birth_date }}" max="{{ current_date }}" required />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">מין:</label>
+          <select name="gender" class="form-select" required>
+            <option value="זכר" {% if user.gender == 'זכר' %}selected{% endif %}>זכר</option>
+            <option value="נקבה" {% if user.gender == 'נקבה' %}selected{% endif %}>נקבה</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">מצב משפחתי:</label>
+          <select name="marital_status" class="form-select" required>
+            <option value="רווק" {% if user.marital_status == 'רווק' %}selected{% endif %}>רווק</option>
+            <option value="נשוי" {% if user.marital_status == 'נשוי' %}selected{% endif %}>נשוי</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="city" class="form-label">מקום מגורים:</label>
+          <input
+  list="cities"
+  name="city"
+  id="city"
+  class="form-control"
+  placeholder="התחל להקליד יישוב..."
+  {% if user.city %} value="{{ user.city }}" {% endif %}
+  required
+/>
+<datalist id="cities"></datalist>
+        </div>
+
+<div class="mb-3">
+  <label for="hourly_wage" class="form-label">שכר שעתי (₪):</label>
+  <input
+    type="range"
+    class="form-range"
+    min="25"
+    max="200"
+    name="hourly_wage"
+    id="hourly_wage"
+    value="{{ user.hourly_wage or 50 }}"
+    step="1"
+  />
+  <div class="text-end">
+    <span id="wage_display" class="badge bg-secondary fs-6">{{ user.hourly_wage or 50 }} ₪</span>
+  </div>
+</div>
+
+<script>
+  const wageInput = document.getElementById("hourly_wage");
+  const wageDisplay = document.getElementById("wage_display");
+
+  function updateWageDisplay() {
+    wageDisplay.textContent = wageInput.value + " ₪";
+  }
+
+  wageInput.addEventListener("input", updateWageDisplay);
+  document.addEventListener("DOMContentLoaded", updateWageDisplay);
+</script>
+
+
+        <div class="form-check mb-3">
+          <input type="checkbox" id="has_degree" name="has_degree" class="form-check-input" onchange="toggleDegreeYear()" {% if user.has_degree %}checked{% endif %}>
+          <label class="form-check-label" for="has_degree">יש לי תואר ראשון</label>
+        </div>
+
+        <div id="degree_year_section" class="mb-3" {% if not user.has_degree %}style="display:none;"{% endif %}>
+          <label class="form-label">שנת קבלה לתואר:</label>
+          <input type="number" name="degree_year" class="form-control" min="1900" max="2100" value="{{ user.degree_year }}">
+        </div>
+
+        <div class="mb-3">
+  <label class="form-label">ילדים:</label>
+  <div id="children_container" class="d-flex flex-column gap-2">
+    {% for child in user.children %}
+      <div class="child-entry d-flex gap-2 align-items-center">
+        <input type="date" name="child_birthdates" class="form-control" value="{{ child.birth_date }}" max="{{ current_date }}">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeChild(this)">🗑️</button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" class="btn btn-outline-secondary mt-2" onclick="addChild()">הוסף ילד</button>
+</div>
+
+
+        <div class="text-center">
+          <button type="submit" class="btn btn-success">שמור</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function addChild() {
+    const container = document.getElementById("children_container");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "child-entry d-flex gap-2 align-items-center";
+
+    const input = document.createElement("input");
+    input.type = "date";
+    input.name = "child_birthdates";
+    input.className = "form-control";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-danger btn-sm";
+    removeBtn.innerText = "🗑️";
+    removeBtn.onclick = () => removeChild(removeBtn);
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(removeBtn);
+
+    container.appendChild(wrapper);
+  }
+
+  function removeChild(button) {
+    const entry = button.parentElement;
+    entry.remove();
+  }
+
+  function toggleDegreeYear() {
+    const checkbox = document.getElementById("has_degree");
+    const section = document.getElementById("degree_year_section");
+    section.style.display = checkbox.checked ? "block" : "none";
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch("/api/cities")
+      .then(response => response.json())
+      .then(cities => {
+        const dataList = document.getElementById("cities");
+        dataList.innerHTML = "";
+        cities.forEach(city => {
+          const option = document.createElement("option");
+          option.value = city;
+          dataList.appendChild(option);
+        });
+      })
+      .catch(error => console.error("שגיאה בטעינת ערים:", error));
+  });
+</script>
+
+
+{% endblock %}
